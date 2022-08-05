@@ -82,9 +82,42 @@ def download():
                         print("Wrote out to {}.jpg".format(idx))
                 
             
+
+def create_cards():
+    """Creating cards with checklists for attachments"""
+    
+    static = [
+        "Check All Photos",
+        "Upload Videos to Youtube",
+        "------------",
+    ]
+    
+    a = t(api_key=api_key, api_secret=api_secret, token=token)
+
+    board_name = "Chester Priority"
+    list_name = "IP Checks"
+
+    # Get the board
+    priority = [x for x in a.list_boards() if x.name == board_name][0]
+    print("Priority: ", priority)
+
+    # Get the lists
+    fadal_photos = [x for x in priority.list_lists() if x.name == list_name][0]
+    print("Lists:", fadal_photos)
+    
+    # Get a list of all folders from top directory
+    with open("../Auctions.txt") as f:
+        raw = f.readlines()
+    
+    cards = [x.split("\t")[1].strip() + " " + x.split("\t")[0].strip() for x in raw]
+    for card_name in cards:
+        print("Creating {}".format(card_name))
+        card = fadal_photos.add_card(card_name)
+        card.add_checklist("TODO", static + os.listdir("../{}".format(card_name)))
     
 if __name__ == "__main__":
-    download()
+    create_cards()
+    # download()
     """
     if len(sys.argv) > 1:
         main(sys.argv[1])
