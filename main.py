@@ -7,14 +7,69 @@ import shutil
 
 import requests
 
+from pprint import pprint
 from trello import TrelloClient as t
+
 
 dotenv.load_dotenv()
 api_key = os.getenv("API_KEY")                                                     
 api_secret = os.getenv("API_SECRET")
 token = os.getenv("TOKEN")
 
-def main(listname, years=[2018,2019,2020]):
+
+def summarize(year="2020", month="1"):
+    """
+    Summarizes a given year and return a list of Card names
+    - Year format is XXXX
+    - Month format is XX
+    """
+    a = t(api_key=api_key, api_secret=api_secret, token=token)
+
+    historical = [x for x in a.list_boards() if x.name == "Historical"]
+
+    if not historical:
+        return "Historical board not found"
+        
+    found_list = [x for x in historical[0].list_lists() if year in x.name]
+    if not found_list:
+        return f"No lists found for the given year {year}"
+    
+    retval = {}
+    for l in found_list:
+        if l.name not in retval:
+            retval[l.name] = []
+        for x in l.list_cards():
+            if f"{year}-{month}" in x.due:
+                retval[l.name].append(x.name)
+    final = {}
+    for item in retval:
+        if len(retval[item]):
+           final[item] = list(set(retval[item]))
+        
+    return final
+    
+def count(year="2020"):
+    """
+    Returns a card list count
+    """
+    a = t(api_key=api_key, api_secret=api_secret, token=token)
+
+    historical = [x for x in a.list_boards() if x.name == "Historical"]
+
+    if not historical:
+        return "Historical board not found"
+        
+    found_list = [x for x in historical[0].list_lists() if year in x.name]
+    total = 0
+    for l in found_list:
+        total += len(l.list_cards())
+    return str(total)
+
+
+def move_lists(listname, years=[2018,2019,2020]):
+    """
+    Moves an old year's cards to a different list in Historical
+    """
     a = t(api_key=api_key, api_secret=api_secret, token=token)
 
     historical = [x for x in a.list_boards() if x.name == "Historical"]

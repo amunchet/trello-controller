@@ -1,2 +1,4 @@
 py-trello
 python-dotenv
+flask
+Jinja2
